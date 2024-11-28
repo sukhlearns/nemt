@@ -1,3 +1,47 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* .css-1hdecum-MuiGrid-root{
+    display: flex !important;
+}
+
+.css-1hix7u8{
+    padding: 0 !important;
+}
+
+.css-wg4xta-MuiGrid-root{
+    padding: 0 !important;
+}
+
+
+.css-16zt3jw-MuiGrid-root{
+    width: 100% !important;
+    display: flex !important;
+    gap: 23px;
+    flex-wrap: nowrap;
+}
+
+.css-1slrxr0-MuiGrid-root,
+.css-9drkqd-MuiGrid-root,
+.css-1lj5egr-MuiGrid-root,
+.css-1idn90j-MuiGrid-root{
+    margin-top: 20px !important;
+    padding: 0 !important;
+    width: 100% !important;
+    
+}
+
+.css-2q92wy-MuiStack-root{
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.css-11acm3b{
+    padding: 0 24px !important;
+}
+
+#__next > div > main > div > div.MuiBox-root.css-1hix7u8 > div.MuiPaper-root.MuiPaper-elevation.MuiPaper-rounded.MuiPaper-elevation3.MuiTableContainer-root.css-8yc9fo-MuiPaper-root-MuiTableContainer-root{
+
+    margin-top: 20px !important;
+} */
