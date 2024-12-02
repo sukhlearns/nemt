@@ -46,7 +46,7 @@ export default function AdminDashboard() {
   return (
     <Box sx={{ width: '100%', p: 0 }}>
       <Typography variant="h4" sx={{ mt:3, fontWeight: 'bold' }}>
-        NEMT Admin Dashboard
+        Dashboard
       </Typography>
 
       {/* Overview Cards */}
@@ -67,14 +67,14 @@ export default function AdminDashboard() {
       </Grid>
 
       {/* Charts and Map */}
-      <Grid container spacing={0} sx={{ mt: 3,display:'flex',gap:3,flexWrap:"nowrap" }}>
+      <Grid container spacing={0} sx={{ mt: 3,display:'flex', flexWrap:"nowrap" }}>
         <Grid item xs={12} md={8}>
-          <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
+          <Paper elevation={3} sx={{ p: 3, height: '100%', mr:1 }}>
             <PageViewsBarChart />
           </Paper>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
+          <Paper elevation={3} sx={{ p: 3, height: '100%', ml:2 }}>
             <ChartUserByCountry />
           </Paper>
         </Grid>
