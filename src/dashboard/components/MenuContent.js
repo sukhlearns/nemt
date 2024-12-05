@@ -1,4 +1,6 @@
 import * as React from 'react';
+import Link from 'next/link'; // Importing Link for client-side navigation
+import { useRouter } from 'next/router'; // Importing the useRouter hook
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -14,29 +16,35 @@ import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 
 const mainListItems = [
-  { text: 'Home', icon: <HomeRoundedIcon /> },
-  { text: 'Data', icon: <AnalyticsRoundedIcon /> },
-  { text: 'Schedule', icon: <PeopleRoundedIcon /> },
-  { text: 'Dispatch', icon: <AssignmentRoundedIcon /> },
-  { text: 'Report', icon: <InfoRoundedIcon /> },
-  { text: 'Admin', icon: <SettingsRoundedIcon /> },
-  { text: 'Where’s My Ride', icon: <HelpRoundedIcon /> },
+  { text: 'Home', icon: <HomeRoundedIcon />, route: '/' },
+  { text: 'Data', icon: <AnalyticsRoundedIcon />, route: '/data' },
+  { text: 'Schedule', icon: <PeopleRoundedIcon />, route: '/schedule' },
+  { text: 'Dispatch', icon: <AssignmentRoundedIcon />, route: '/dispatch' },
+  { text: 'Report', icon: <InfoRoundedIcon />, route: '/report' },
+  { text: 'Admin', icon: <SettingsRoundedIcon />, route: '/admin' },
+  { text: 'Where’s My Ride', icon: <HelpRoundedIcon />, route: '/ride' },
 ];
 
 export default function MenuContent() {
+  const router = useRouter(); // Initialize the router
+
   return (
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: 'space-between' }}>
       <List dense>
         {mainListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: 'block' }}>
-            <ListItemButton selected={index === 0}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
+            {/* Wrap each ListItemButton in Link for client-side navigation */}
+            <Link href={item.route} passHref>
+              <ListItemButton
+                selected={router.pathname === item.route} // Check if the current path matches the item's route
+              >
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </Link>
           </ListItem>
         ))}
       </List>
-
     </Stack>
   );
 }
