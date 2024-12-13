@@ -12,8 +12,6 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 
-import ChartUserByCountry from './ChartUserByCountry';
-import PageViewsBarChart from './PageViewsBarChart';
 import WorldMap from './WorldMap';
 
 const dataCards = [
@@ -23,14 +21,15 @@ const dataCards = [
 ];
 
 const samplePatients = [
-  { id: 'P001', name: 'John Doe', phone: '123-456-7890', address: '123 Main St, Springfield' },
-  { id: 'P002', name: 'Jane Smith', phone: '987-654-3210', address: '456 Elm St, Shelbyville' },
-  { id: 'P003', name: 'Alice Johnson', phone: '555-123-4567', address: '789 Oak St, Capital City' },
-  { id: 'P004', name: 'Bob Brown', phone: '333-444-5555', address: '101 Pine St, Ogdenville' },
+  { id: 'P001', name: 'John Doe', phone: '123-456-7890', address: '123 Main St, Springfield', location: { lat: 37.7749, lng: -122.4194 }, driver: { name: 'Driver 1', location: { lat: 37.8044, lng: -122.2711 }, eta: 10 }},
+  { id: 'P002', name: 'Jane Smith', phone: '987-654-3210', address: '456 Elm St, Shelbyville', location: { lat: 38.7749, lng: -123.4194 }, driver: { name: 'Driver 2', location: { lat: 38.8044, lng: -123.2711 }, eta: 15 }},
+  { id: 'P003', name: 'Alice Johnson', phone: '555-123-4567', address: '789 Oak St, Capital City', location: { lat: 39.7749, lng: -124.4194 }, driver: { name: 'Driver 3', location: { lat: 39.8044, lng: -124.2711 }, eta: 20 }},
+  { id: 'P004', name: 'Bob Brown', phone: '333-444-5555', address: '101 Pine St, Ogdenville', location: { lat: 40.7749, lng: -125.4194 }, driver: { name: 'Driver 4', location: { lat: 40.8044, lng: -125.2711 }, eta: 30 }},
 ];
 
 export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [selectedPatient, setSelectedPatient] = React.useState(null);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -43,14 +42,18 @@ export default function AdminDashboard() {
       patient.phone.includes(searchTerm)
   );
 
+  const handleSelectPatient = (patient) => {
+    setSelectedPatient(patient);
+  };
+
   return (
     <Box sx={{ width: '100%', p: 0 }}>
-      <Typography variant="h4" sx={{ mt:3, fontWeight: 'bold' }}>
+      <Typography variant="h4" sx={{ mt: 3, fontWeight: 'bold' }}>
         Dashboard
       </Typography>
 
       {/* Overview Cards */}
-      <Grid container spacing={0} sx={{ mt: 3,display:'flex',gap:3,flexWrap:"nowrap", width:'100%' }}>
+      <Grid container spacing={0} sx={{ mt: 3, display: 'flex', gap: 3, flexWrap: 'nowrap', width: '100%' }}>
         {dataCards.map((card, index) => (
           <Grid item xs={12} sm={4} key={index}>
             <Paper elevation={3} sx={{ p: 3, textAlign: 'center' }}>
@@ -66,30 +69,49 @@ export default function AdminDashboard() {
         ))}
       </Grid>
 
-      {/* Charts and Map */}
-      <Grid container spacing={0} sx={{ mt: 3,display:'flex', flexWrap:"nowrap" }}>
-        <Grid item xs={12} md={8}>
-          <Paper elevation={3} sx={{ p: 3, height: '100%', mr:1 }}>
-            <PageViewsBarChart />
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Paper elevation={3} sx={{ p: 3, height: '100%', ml:2 }}>
-            <ChartUserByCountry />
-          </Paper>
-        </Grid>
+      <Grid item xs={12}>
+        <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
+          <WorldMap patient={selectedPatient} driver={selectedPatient?.driver} />
+        </Paper>
       </Grid>
 
-      <Grid item xs={12}>
-          <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-            <WorldMap />
-          </Paper>
-      </Grid>
+      {/* Selected Patient and Driver Details with ETA */}
+      {selectedPatient && (
+        <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Selected Patient & Driver Details
+          </Typography>
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body1">
+              <strong>Patient Name:</strong> {selectedPatient.name}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Patient ID:</strong> {selectedPatient.id}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Phone:</strong> {selectedPatient.phone}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Address:</strong> {selectedPatient.address}
+            </Typography>
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body1">
+              <strong>Driver:</strong> {selectedPatient.driver.name}
+            </Typography>
+            <Typography variant="body1">
+              <strong>ETA:</strong> {selectedPatient.driver.eta} minutes
+            </Typography>
+          </Box>
+        </Paper>
+      )}
 
       {/* Search Form */}
       <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-        <Typography variant="h6" sx={{mb:2}}>Search Patients</Typography>
-        <Grid container spacing={0} sx={{gap:3}}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Search Patients
+        </Typography>
+        <Grid container spacing={0} sx={{ gap: 3 }}>
           <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
@@ -120,7 +142,14 @@ export default function AdminDashboard() {
           </TableHead>
           <TableBody>
             {filteredPatients.map((patient) => (
-              <TableRow key={patient.id}>
+              <TableRow
+                key={patient.id}
+                onClick={() => handleSelectPatient(patient)}
+                style={{
+                  cursor: 'pointer',
+                  backgroundColor: selectedPatient?.id === patient.id ? '#f0f0f0' : 'transparent', // Highlight selected row
+                }}
+              >
                 <TableCell>{patient.id}</TableCell>
                 <TableCell>{patient.name}</TableCell>
                 <TableCell>{patient.phone}</TableCell>
