@@ -1,46 +1,88 @@
-import * as React from 'react';
-import { Grid, Box, Typography, TextField, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import {
+  Grid,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+} from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { createClient } from '@supabase/supabase-js';
+import dayjs from 'dayjs';
 
-const sampleData = [
-  { id: 'C001', name: 'John Doe', phone: '123-456-7890', scheduledDate: '2024-12-10 10:00 AM' },
-  { id: 'C002', name: 'Jane Smith', phone: '987-654-3210', scheduledDate: '2024-12-12 02:00 PM' },
-  { id: 'C003', name: 'Alice Johnson', phone: '555-123-4567', scheduledDate: '2024-12-14 01:00 PM' },
-  { id: 'C004', name: 'Bob Brown', phone: '333-444-5555', scheduledDate: '2024-12-15 11:30 AM' },
-  // Add more sample data as needed
-];
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export default function SchedulePage() {
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [selectedDate, setSelectedDate] = React.useState(null);
-  const [selectedClient, setSelectedClient] = React.useState('');
-  const [scheduledData, setScheduledData] = React.useState(sampleData);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedClientId, setSelectedClientId] = useState('');
+  const [scheduledData, setScheduledData] = useState([]);
 
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
+  // Fetch data from Supabase
+  const fetchScheduledData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .order('scheduled_date', { ascending: true });
+
+      if (error) throw error;
+
+      setScheduledData(data || []);
+    } catch (error) {
+      console.error('Error fetching scheduled data:', error.message);
+    }
   };
 
-  const handleDateChange = (newValue) => {
-    setSelectedDate(newValue);
+  // Update an existing client's schedule
+  const handleSchedule = async () => {
+    if (!selectedClientId || !selectedDate) {
+      alert('Please select a client and date.');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({ scheduled_date: selectedDate.toISOString(), status: 'Scheduled' })
+        .eq('id', selectedClientId);
+
+      if (error) throw error;
+
+      alert('Schedule updated successfully!');
+      fetchScheduledData(); // Refresh the data
+    } catch (error) {
+      console.error('Error updating schedule:', error.message);
+    }
   };
 
-  const handleSchedule = () => {
-    const newSchedule = {
-      id: `C00${scheduledData.length + 1}`,
-      name: selectedClient,
-      phone: '555-000-0000',
-      scheduledDate: selectedDate ? selectedDate.format('YYYY-MM-DD HH:mm A') : '',
-    };
-    setScheduledData([...scheduledData, newSchedule]);
-  };
-
+  // Search filter
   const filteredData = scheduledData.filter(
     (data) =>
       data.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      data.phone.includes(searchTerm) ||
-      data.id.toLowerCase().includes(searchTerm.toLowerCase())
+      data.phone.includes(searchTerm)
   );
+
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchScheduledData();
+  }, []);
 
   return (
     <Box sx={{ width: '100%', p: 0 }}>
@@ -60,7 +102,7 @@ export default function SchedulePage() {
               label="Search Client"
               variant="outlined"
               value={searchTerm}
-              onChange={handleSearch}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
@@ -68,12 +110,12 @@ export default function SchedulePage() {
               <InputLabel id="client-select-label">Select Client</InputLabel>
               <Select
                 labelId="client-select-label"
-                value={selectedClient}
-                onChange={(e) => setSelectedClient(e.target.value)}
+                value={selectedClientId}
+                onChange={(e) => setSelectedClientId(e.target.value)}
                 label="Select Client"
               >
                 {filteredData.map((data) => (
-                  <MenuItem key={data.id} value={data.name}>
+                  <MenuItem key={data.id} value={data.id}>
                     {data.name}
                   </MenuItem>
                 ))}
@@ -85,14 +127,14 @@ export default function SchedulePage() {
               <DatePicker
                 label="Select Date and Time"
                 value={selectedDate}
-                onChange={handleDateChange}
+                onChange={(newValue) => setSelectedDate(newValue)}
                 renderInput={(params) => <TextField {...params} fullWidth />}
               />
             </LocalizationProvider>
           </Grid>
           <Grid item xs={12}>
-            <Button  variant="contained" color="primary" onClick={handleSchedule}>
-              Schedule Ride
+            <Button variant="contained" color="primary" onClick={handleSchedule}>
+              Update Schedule
             </Button>
           </Grid>
         </Grid>
@@ -103,19 +145,27 @@ export default function SchedulePage() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Client Code</TableCell>
+              <TableCell>Patient ID</TableCell>
               <TableCell>Name</TableCell>
               <TableCell>Phone</TableCell>
+              <TableCell>Address</TableCell>
               <TableCell>Scheduled Date</TableCell>
+              <TableCell>Status</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {scheduledData.map((data) => (
+            {filteredData.map((data) => (
               <TableRow key={data.id}>
                 <TableCell>{data.id}</TableCell>
                 <TableCell>{data.name}</TableCell>
                 <TableCell>{data.phone}</TableCell>
-                <TableCell>{data.scheduledDate}</TableCell>
+                <TableCell>{data.address}</TableCell>
+                <TableCell>
+                  {data.scheduled_date
+                    ? dayjs(data.scheduled_date).format('YYYY-MM-DD HH:mm A')
+                    : 'Not Scheduled'}
+                </TableCell>
+                <TableCell>{data.status || 'Pending'}</TableCell>
               </TableRow>
             ))}
           </TableBody>

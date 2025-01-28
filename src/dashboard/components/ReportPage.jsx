@@ -1,44 +1,93 @@
-import * as React from 'react';
-import { Grid, Box, Typography, TextField, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import {
+  Grid,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from '@mui/material';
+import { createClient } from '@supabase/supabase-js';
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
-const sampleReportData = [
-  { id: 'C001', name: 'John Doe', phone: '123-456-7890', scheduledDate: '2024-12-10 10:00 AM', status: 'Completed' },
-  { id: 'C002', name: 'Jane Smith', phone: '987-654-3210', scheduledDate: '2024-12-12 02:00 PM', status: 'Dispatched' },
-  { id: 'C003', name: 'Alice Johnson', phone: '555-123-4567', scheduledDate: '2024-12-14 01:00 PM', status: 'Pending' },
-  { id: 'C004', name: 'Bob Brown', phone: '333-444-5555', scheduledDate: '2024-12-15 11:30 AM', status: 'Completed' },
-  // Add more sample data as needed
-];
+const ReportPage = () => {
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [filteredData, setFilteredData] = useState([]);
 
-export default function ReportPage() {
-  const [startDate, setStartDate] = React.useState(null);
-  const [endDate, setEndDate] = React.useState(null);
-  const [statusFilter, setStatusFilter] = React.useState('');
-  const [filteredData, setFilteredData] = React.useState(sampleReportData);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const handleStartDateChange = (newValue) => {
-    setStartDate(newValue);
+  const fetchData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*');
+
+      if (error) {
+        console.error('Error fetching data:', error);
+        return;
+      }
+
+      setFilteredData(data || []);
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    }
   };
 
-  const handleEndDateChange = (newValue) => {
-    setEndDate(newValue);
+  const handleStartDateChange = (e) => {
+    setStartDate(e.target.value);
+  };
+
+  const handleEndDateChange = (e) => {
+    setEndDate(e.target.value);
   };
 
   const handleStatusChange = (e) => {
     setStatusFilter(e.target.value);
   };
 
-  const filterData = () => {
-    const filtered = sampleReportData.filter((data) => {
-      const dateInRange =
-        (!startDate || new Date(data.scheduledDate) >= new Date(startDate)) &&
-        (!endDate || new Date(data.scheduledDate) <= new Date(endDate));
+  const filterData = async () => {
+    try {
+      let query = supabase.from('clients').select('*');
 
-      const statusMatch = !statusFilter || data.status === statusFilter;
+      if (startDate) {
+        query = query.gte('scheduled_date', startDate);
+      }
+      if (endDate) {
+        query = query.lte('scheduled_date', endDate);
+      }
+      if (statusFilter) {
+        query = query.eq('status', statusFilter);
+      }
 
-      return dateInRange && statusMatch;
-    });
-    setFilteredData(filtered);
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error filtering data:', error);
+        return;
+      }
+
+      setFilteredData(data || []);
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    }
   };
 
   return (
@@ -58,7 +107,7 @@ export default function ReportPage() {
               fullWidth
               label="Start Date"
               variant="outlined"
-              value={startDate}
+              value={startDate || ''}
               onChange={handleStartDateChange}
               type="date"
               InputLabelProps={{
@@ -71,7 +120,7 @@ export default function ReportPage() {
               fullWidth
               label="End Date"
               variant="outlined"
-              value={endDate}
+              value={endDate || ''}
               onChange={handleEndDateChange}
               type="date"
               InputLabelProps={{
@@ -97,7 +146,7 @@ export default function ReportPage() {
           </Grid>
           <Grid item xs={12}>
             <Button variant="contained" color="primary" onClick={filterData}>
-              Generate Report
+              Search
             </Button>
           </Grid>
         </Grid>
@@ -108,7 +157,7 @@ export default function ReportPage() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Client Code</TableCell>
+              <TableCell>Patient ID</TableCell>
               <TableCell>Name</TableCell>
               <TableCell>Phone</TableCell>
               <TableCell>Scheduled Date</TableCell>
@@ -121,7 +170,7 @@ export default function ReportPage() {
                 <TableCell>{data.id}</TableCell>
                 <TableCell>{data.name}</TableCell>
                 <TableCell>{data.phone}</TableCell>
-                <TableCell>{data.scheduledDate}</TableCell>
+                <TableCell>{new Date(data.scheduled_date).toLocaleString()}</TableCell>
                 <TableCell>{data.status}</TableCell>
               </TableRow>
             ))}
@@ -130,4 +179,6 @@ export default function ReportPage() {
       </TableContainer>
     </Box>
   );
-}
+};
+
+export default ReportPage;

@@ -8,8 +8,10 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import SelectContent from './SelectContent';
 import MenuContent from './MenuContent';
-import CardAlert from './CardAlert';
 import OptionsMenu from './OptionsMenu';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
 const drawerWidth = 240;
 
@@ -25,6 +27,16 @@ const Drawer = styled(MuiDrawer)({
 });
 
 export default function SideMenu() {
+  const [user, setUser] = React.useState(null);
+
+  React.useEffect(() => {
+    async function fetchUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    }
+    fetchUser();
+  }, []);
+
   return (
     <Drawer
       variant="permanent"
@@ -42,12 +54,10 @@ export default function SideMenu() {
           p: 1.5,
         }}
       >
-        
         <SelectContent />
       </Box>
       <Divider />
       <MenuContent />
-      
       <Stack
         direction="row"
         sx={{
@@ -60,16 +70,16 @@ export default function SideMenu() {
       >
         <Avatar
           sizes="small"
-          alt="Riley Carter"
-          src="/static/images/avatar/7.jpg"
+          alt={user?.user_metadata?.full_name || 'User'}
+          src={user?.user_metadata?.avatar_url || '/static/images/avatar/placeholder.jpg'}
           sx={{ width: 36, height: 36 }}
         />
         <Box sx={{ mr: 'auto' }}>
           <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px' }}>
-            Sukh Singh
+            {user?.user_metadata?.full_name || 'Admin'}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Sukh@email.com
+            {user?.email || 'No email available'}
           </Typography>
         </Box>
         <OptionsMenu />
